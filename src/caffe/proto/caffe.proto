@@ -227,7 +227,7 @@ message LayerParameter {
   // line above the enum. Update the next available ID when you add a new
   // LayerType.
   //
-  // LayerType next available ID: 39 (last added: EXP)
+  // LayerType next available ID: 40 (last added: EARLYSTOP)
   enum LayerType {
     // "NONE" layer type is 0th enum element so that we don't cause confusion
     // by defaulting to an existent LayerType (instead, should usually error if
@@ -243,6 +243,7 @@ message LayerParameter {
     DATA = 5;
     DROPOUT = 6;
     DUMMY_DATA = 32;
+    EARLYSTOP = 39;
     EUCLIDEAN_LOSS = 7;
     ELTWISE = 25;
     EXP = 38;
@@ -307,8 +308,9 @@ message LayerParameter {
   optional DataParameter data_param = 11;
   optional DropoutParameter dropout_param = 12;
   optional DummyDataParameter dummy_data_param = 26;
+  optional EarlystopParameter earlystop_param = 42;    //Earlystop, next avaliabel ID is 43
   optional EltwiseParameter eltwise_param = 24;
-  optional ExpParameter exp_param = 41;
+  optional ExpParameter exp_param = 41;          
   optional HDF5DataParameter hdf5_data_param = 13;
   optional HDF5OutputParameter hdf5_output_param = 14;
   optional HingeLossParameter hinge_loss_param = 29;
@@ -467,7 +469,12 @@ message DummyDataParameter {
   repeated uint32 height = 4;
   repeated uint32 width = 5;
 }
-
+// Message that stores parameters used by EarlystopLayer
+message EarlystopParameter {
+  optional float threshold = 1;
+  optional float lamina = 2;
+  optional uint32 time_interval = 3;
+}
 // Message that stores parameters used by EltwiseLayer
 message EltwiseParameter {
   enum EltwiseOp {

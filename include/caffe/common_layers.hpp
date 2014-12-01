@@ -487,6 +487,50 @@ class SliceLayer : public Layer<Dtype> {
   vector<int> slice_point_;
 };
 
+/**
+* @brief Takes loss as input to decide whether stop sub-task training, this
+*        should be used in a Multi-Task Learning scenario
+*/
+template <typename Dtype>
+class EarlystopLayer : public Layer<Dtype> {
+public:
+    explicit EarlystopLayer(const LayerParameter& param)
+    : Layer<Dtype>(param) {}
+    virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
+                            const vector<Blob<Dtype>*>& top);
+    virtual void Reshape(const vector<Blob<Dtype>*>& bottom,
+                         const vector<Blob<Dtype>*>& top);
+    virtual inline LayerParameter_LayerType type() const {
+        return LayerParameter_LayerType_EARLYSTOP;
+    }
+    virtual inline int ExactNumBottomBlobs() const { return 1; }
+    virtual inline int ExactNumTopBlobs() const { return 1; }
+        
+protected:
+    virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
+                             const vector<Blob<Dtype>*>& top);
+    virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
+                              const vector<bool>& propagate_down,
+                              const vector<Blob<Dtype>*>& bottom);
+    virtual Dtype find_min(const std::vector<Dtype> loss_sequence);
+    virtual Dtype find_median(const std::vector<Dtype> loss_sequence, const size_t k);
+    virtual Dtype sum_lastk(const std::vector<Dtype> loss_sequence, const size_t k);
+    // The method is from "Facial Landmark Detection by Deep Multi-task
+    // Learning" CUHK
+    float threshold_;      // ε in original paper
+    float lamina_;         // λ in original paper, also the loss weight for
+    // previous loss layer
+    size_t time_interval_;    // k in original paper, to check how many iterations
+    // we want to check
+    bool stop;             // decide whether stop training sub-task, true is to
+    // stop training, false is to continue
+    std::vector<Dtype> train_loss;
+    Dtype val_loss;
+    Dtype median;
+    Dtype minimum;
+    Dtype sum_loss;
+};
+
 }  // namespace caffe
 
 #endif  // CAFFE_COMMON_LAYERS_HPP_
