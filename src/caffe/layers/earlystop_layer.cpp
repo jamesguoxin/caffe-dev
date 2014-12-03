@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <vector>
 #include <limits>
+#include <fstream>
 
 #include "caffe/layer.hpp"
 #include "caffe/util/math_functions.hpp"
@@ -55,39 +56,55 @@ namespace caffe{
     void EarlystopLayer<Dtype>::Reshape(const vector<Blob<Dtype>*>& bottom,
                                         const vector<Blob<Dtype>*>& top) {
         top[0]->Reshape(bottom[0]->num(), bottom[0]->channels(),
-                           bottom[0]->height(), bottom[0]->width());
+                        bottom[0]->height(), bottom[0]->width());
     }
     
     template <typename Dtype>
     void EarlystopLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
-        LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
         Dtype* bottom_data = bottom[0]->mutable_cpu_data();
         Dtype tmp = 0;
         top[0]->mutable_cpu_data()[0] = bottom_data[0];
         if (Caffe::phase() == Caffe::TRAIN) {
-            val_loss = 0;
+            //val_loss = 0;
             train_loss.push_back(bottom_data[0]);
-            LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
-            LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
-        } else if (Caffe::phase() == Caffe::TEST) {
-            //LOG(INFO) << "EARLYSTOP Testing phase" << std::endl;
-            val_loss = bottom_data[0];
-            if (train_loss.size() >= time_interval_) {
+            LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
+            //LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
+            //LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
+            if (train_loss.size() > 0 && train_loss.size() % time_interval_ == 0) {
+                LOG(INFO) << "Start CHECKING" << std::endl;
+                std::ifstream tmp2("/Users/JamesGuo/Documents/MasterThesis/tmp.bin", std::ios::in | std::ios::binary);
+                tmp2.read((char *) &val_loss, sizeof(Dtype));
+                tmp2.close();
+                LOG(INFO) << "Read Val_Loss " << val_loss << " from tmp.bin" << std::endl;
+                
                 minimum = EarlystopLayer<Dtype>::find_min(train_loss);
                 median = EarlystopLayer<Dtype>::find_median(train_loss, time_interval_);
                 sum_loss = EarlystopLayer<Dtype>::sum_lastk(train_loss, time_interval_);
+                LOG(INFO) << "MINIMUM is " << minimum << std::endl;
+                LOG(INFO) << "MEDIAN is " << median << std::endl;
+                LOG(INFO) << "SUM is " << sum_loss << std::endl;
                 tmp = time_interval_ * median / (sum_loss - time_interval_ * median);
                 tmp = tmp * (val_loss - minimum) / (lamina_ * minimum);
                 LOG(INFO) << "The value for comparison is " << tmp << std::endl;
                 if (tmp > threshold_) {
                     stop = true;
+                }
+                
+                if (stop == true) {
                     bottom[0]->mutable_cpu_diff()[0] = 0;
                     LOG(INFO) << "Sub-task should be terminated" << std::endl;
                 } else {
                     LOG(INFO) << "Sub-task should continue" << std::endl;
                 }
             }
+        } else if (Caffe::phase() == Caffe::TEST) {
+            //LOG(INFO) << "EARLYSTOP Testing phase" << std::endl;
+            val_loss = bottom_data[0];
+            std::ofstream tmp1("/Users/JamesGuo/Documents/MasterThesis/tmp.bin", std::ios::out | std::ios::binary);
+            tmp1.write((char *) &val_loss, sizeof(Dtype));
+            tmp1.close();
+            LOG(INFO) << "Wrote Val_Loss " << val_loss << " to tmp.bin" << std::endl;
         }
     }
     
