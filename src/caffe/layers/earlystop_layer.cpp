@@ -61,15 +61,17 @@ namespace caffe{
     template <typename Dtype>
     void EarlystopLayer<Dtype>::Forward_cpu(const vector<Blob<Dtype>*>& bottom,
                                             const vector<Blob<Dtype>*>& top) {
+        LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
         Dtype* bottom_data = bottom[0]->mutable_cpu_data();
         Dtype tmp = 0;
         top[0]->mutable_cpu_data()[0] = bottom_data[0];
         if (Caffe::phase() == Caffe::TRAIN) {
             val_loss = 0;
             train_loss.push_back(bottom_data[0]);
-            LOG(INFO) << "EARLYSTOP Training phase" << std::endl;
+            LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
+            LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
         } else if (Caffe::phase() == Caffe::TEST) {
-            LOG(INFO) << "EARLYSTOP Testing phase" << std::endl;
+            //LOG(INFO) << "EARLYSTOP Testing phase" << std::endl;
             val_loss = bottom_data[0];
             if (train_loss.size() >= time_interval_) {
                 minimum = EarlystopLayer<Dtype>::find_min(train_loss);
@@ -80,6 +82,7 @@ namespace caffe{
                 LOG(INFO) << "The value for comparison is " << tmp << std::endl;
                 if (tmp > threshold_) {
                     stop = true;
+                    bottom[0]->mutable_cpu_diff()[0] = 0;
                     LOG(INFO) << "Sub-task should be terminated" << std::endl;
                 } else {
                     LOG(INFO) << "Sub-task should continue" << std::endl;
@@ -92,6 +95,7 @@ namespace caffe{
     void EarlystopLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
                                              const vector<bool>& propagate_down,
                                              const vector<Blob<Dtype>*>& bottom) {
+        LOG(INFO) << "Enter Backward propagation of Earlystop Layer" << std::endl;
         if (stop == true) {
             bottom[0]->mutable_cpu_diff()[0] = 0;
             LOG(INFO) << "EarlyStop Gradient is 0, update will be terminated" << std::endl;
