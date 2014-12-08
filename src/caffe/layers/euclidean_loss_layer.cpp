@@ -40,7 +40,7 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
     if (propagate_down[i]) {
       const Dtype sign = (i == 0) ? 1 : -1;
       const Dtype alpha = sign * top[0]->cpu_diff()[0] / bottom[i]->num();
-      LOG(INFO) << "Euclidean Loss Layer Alpha value is " << alpha << std::endl;
+      //LOG(INFO) << "Euclidean Loss Layer Alpha value is " << alpha << std::endl;
       //LOG(INFO) << "Euclidean Loss Layer top[0]->cpu_diff()[0] is " << top[0]->cpu_diff()[0] << std::endl;
       caffe_cpu_axpby(
           bottom[i]->count(),              // count

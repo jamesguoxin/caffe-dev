@@ -45,10 +45,15 @@ namespace caffe{
         threshold_ = early_param.threshold();
         lamina_ = early_param.lamina();
         time_interval_ = early_param.time_interval();
+        path_tmp_ = early_param.path_tmp();
+        LOG(INFO) << "path_tmp is " << path_tmp_ << std::endl;
+        iter_test_ = early_param.iter_test();
+        
         stop = false;
         median = 0;
         minimum = 0;
         sum_loss = 0;
+        
         CHECK_EQ(bottom[0]->count(), 1) << "The input must be single Loss value";
     }
     
@@ -64,19 +69,15 @@ namespace caffe{
                                             const vector<Blob<Dtype>*>& top) {
         Dtype* bottom_data = bottom[0]->mutable_cpu_data();
         Dtype tmp = 0;
+        Dtype val_loss_mean = 0;
         top[0]->mutable_cpu_data()[0] = bottom_data[0];
         if (Caffe::phase() == Caffe::TRAIN) {
-            //val_loss = 0;
-            train_loss.push_back(bottom_data[0]);
-            LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
-            //LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
-            //LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
             if (train_loss.size() > 0 && train_loss.size() % time_interval_ == 0) {
                 LOG(INFO) << "Start CHECKING" << std::endl;
-                std::ifstream tmp2("/Users/JamesGuo/Documents/MasterThesis/tmp.bin", std::ios::in | std::ios::binary);
-                tmp2.read((char *) &val_loss, sizeof(Dtype));
+                std::ifstream tmp2(path_tmp_.c_str(), std::ios::in | std::ios::binary);
+                tmp2.read((char *) &val_loss_mean, sizeof(Dtype));
                 tmp2.close();
-                LOG(INFO) << "Read Val_Loss " << val_loss << " from tmp.bin" << std::endl;
+                LOG(INFO) << "Read Val_Loss " << val_loss_mean << " from tmp.bin" << std::endl;
                 
                 minimum = EarlystopLayer<Dtype>::find_min(train_loss);
                 median = EarlystopLayer<Dtype>::find_median(train_loss, time_interval_);
@@ -85,7 +86,7 @@ namespace caffe{
                 LOG(INFO) << "MEDIAN is " << median << std::endl;
                 LOG(INFO) << "SUM is " << sum_loss << std::endl;
                 tmp = time_interval_ * median / (sum_loss - time_interval_ * median);
-                tmp = tmp * (val_loss - minimum) / (lamina_ * minimum);
+                tmp = tmp * (val_loss_mean - minimum) / (lamina_ * minimum);
                 LOG(INFO) << "The value for comparison is " << tmp << std::endl;
                 if (tmp > threshold_) {
                     stop = true;
@@ -98,13 +99,24 @@ namespace caffe{
                     LOG(INFO) << "Sub-task should continue" << std::endl;
                 }
             }
+            
+            train_loss.push_back(bottom_data[0]);
+            LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
+            //LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
+            //LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
+            
         } else if (Caffe::phase() == Caffe::TEST) {
             //LOG(INFO) << "EARLYSTOP Testing phase" << std::endl;
-            val_loss = bottom_data[0];
-            std::ofstream tmp1("/Users/JamesGuo/Documents/MasterThesis/tmp.bin", std::ios::out | std::ios::binary);
-            tmp1.write((char *) &val_loss, sizeof(Dtype));
-            tmp1.close();
-            LOG(INFO) << "Wrote Val_Loss " << val_loss << " to tmp.bin" << std::endl;
+            val_loss.push_back(bottom_data[0]);
+            if (val_loss.size() > 0 && val_loss.size() % iter_test_ == 0) {
+                val_loss_mean = EarlystopLayer<Dtype>::sum_lastk(val_loss, iter_test_) / iter_test_;
+                std::ofstream tmp1(path_tmp_.c_str(), std::ios::out | std::ios::binary);
+                tmp1.write((char *) &val_loss_mean, sizeof(Dtype));
+                tmp1.close();
+                LOG(INFO) << "Wrote Val_Loss_Mean " << val_loss_mean << " to tmp.bin" << std::endl;
+            }
+            
+            //LOG(INFO) << "iter_test is " << iter_test << std::endl;
         }
     }
     

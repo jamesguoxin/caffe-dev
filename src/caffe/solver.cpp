@@ -454,6 +454,23 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
       Dtype local_rate = rate * net_params_lr[param_id];
       Dtype local_decay = weight_decay * net_params_weight_decay[param_id];
 
+      ////////////////////////////////////////////////////////////////////////////////////////////////////
+      // James' personal code added
+      //LOG(INFO) << "local learning rate for net params " << param_id << " is " << local_rate << std::endl;
+      bool stop_training = true;
+      for (size_t i = 0; i < net_params[param_id]->count(); i ++) {
+          if (net_params[param_id]->cpu_diff()[i] != 0) {
+              stop_training = false;
+              break;
+          }
+      }
+      if (stop_training == true) {
+          //LOG(INFO) << "Stop train is " << stop_training  << " for net no. " << param_id << std::endl;
+          momentum = 0;
+          local_decay = 0;
+      }
+      // James' personal code added
+      ////////////////////////////////////////////////////////////////////////////////////////////////////
       if (local_decay) {
         if (regularization_type == "L2") {
           // add weight decay

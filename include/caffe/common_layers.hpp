@@ -517,18 +517,22 @@ protected:
     virtual Dtype sum_lastk(const std::vector<Dtype> loss_sequence, const size_t k);
     // The method is from "Facial Landmark Detection by Deep Multi-task
     // Learning" CUHK
-    float threshold_;      // ε in original paper
-    float lamina_;         // λ in original paper, also the loss weight for
-    // previous loss layer
-    size_t time_interval_;    // k in original paper, to check how many iterations
-    // we want to check
-    bool stop;             // decide whether stop training sub-task, true is to
-    // stop training, false is to continue
+    float threshold_;          // ε in original paper
+    float lamina_;             // λ in original paper, also the loss weight for
+                               // previous loss layer
+    size_t time_interval_;     // k in original paper, to check how many iterations
+                               // we want to check
+    std::string path_tmp_;
+    int iter_test_;
+    
+    bool stop;                 // decide whether stop training sub-task, true is to
+                               // stop training, false is to continue
     std::vector<Dtype> train_loss;
-    Dtype val_loss;
+    std::vector<Dtype> val_loss;
     Dtype median;
     Dtype minimum;
     Dtype sum_loss;
+    
 };
 
 }  // namespace caffe

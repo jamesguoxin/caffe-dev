@@ -474,6 +474,8 @@ message EarlystopParameter {
   optional float threshold = 1;
   optional float lamina = 2;
   optional uint32 time_interval = 3;
+  optional string path_tmp = 4;
+  optional uint32 iter_test = 5;
 }
 // Message that stores parameters used by EltwiseLayer
 message EltwiseParameter {
