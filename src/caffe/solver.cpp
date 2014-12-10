@@ -469,6 +469,7 @@ void SGDSolver<Dtype>::ComputeUpdateValue() {
           momentum = 0;
           local_decay = 0;
       }
+      // LOG(INFO) << "Momentum for net params " << param_id << " is " << momentum << std::endl;
       // James' personal code added
       ////////////////////////////////////////////////////////////////////////////////////////////////////
       if (local_decay) {

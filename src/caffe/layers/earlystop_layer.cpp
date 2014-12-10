@@ -93,7 +93,7 @@ namespace caffe{
                 }
                 
                 if (stop == true) {
-                    bottom[0]->mutable_cpu_diff()[0] = 0;
+                    bottom[0]->mutable_cpu_diff()[0] = 1.5;
                     LOG(INFO) << "Sub-task should be terminated" << std::endl;
                 } else {
                     LOG(INFO) << "Sub-task should continue" << std::endl;
@@ -101,7 +101,7 @@ namespace caffe{
             }
             
             train_loss.push_back(bottom_data[0]);
-            LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
+            //LOG(INFO) << "Size of train_loss is " << train_loss.size() << std::endl;
             //LOG(INFO) << "Passed Loss Value is " << bottom_data[0] << std::endl;
             //LOG(INFO) << "EARLYSTOP Training phase, latest train loss is " << train_loss.back() << std::endl;
             

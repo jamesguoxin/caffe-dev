@@ -48,7 +48,7 @@ void EuclideanLossLayer<Dtype>::Backward_cpu(const vector<Blob<Dtype>*>& top,
           diff_.cpu_data(),                   // a
           Dtype(0),                           // beta
           bottom[i]->mutable_cpu_diff());  // b
-      LOG(INFO) << "Bottom " << i << " Gradient of Euclidean Loss is " << bottom[i]->mutable_cpu_diff()[0] << std::endl;
+      //LOG(INFO) << "Bottom " << i << " Gradient of Euclidean Loss is " << bottom[i]->mutable_cpu_diff()[0] << std::endl;
     }
   }
 }
