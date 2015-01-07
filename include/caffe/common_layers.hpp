@@ -512,7 +512,7 @@ protected:
     virtual void Backward_cpu(const vector<Blob<Dtype>*>& top,
                               const vector<bool>& propagate_down,
                               const vector<Blob<Dtype>*>& bottom);
-    virtual Dtype find_min(const std::vector<Dtype> loss_sequence);
+    virtual Dtype find_min(const std::vector<Dtype> loss_sequence, const size_t k);
     virtual Dtype find_median(const std::vector<Dtype> loss_sequence, const size_t k);
     virtual Dtype sum_lastk(const std::vector<Dtype> loss_sequence, const size_t k);
     // The method is from "Facial Landmark Detection by Deep Multi-task
@@ -524,6 +524,8 @@ protected:
                                // we want to check
     std::string path_tmp_;
     int iter_test_;
+    int iter_train_;
+    int index;
     
     bool stop;                 // decide whether stop training sub-task, true is to
                                // stop training, false is to continue
@@ -532,6 +534,8 @@ protected:
     Dtype median;
     Dtype minimum;
     Dtype sum_loss;
+    Dtype val_list[2];         // val_list[0] = minimunal val value so far
+                               // val_list[1] = current val value
     
 };
 
